@@ -1,5 +1,5 @@
 set BUSES := 1 2 3 4 5;
-set SLOTS := 1 2 3 4;
+set SLOTS := 1 2 3 4 5 6 7;
 
 param kd := 2.0;
 param kp := 5.0;
