@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import sys, re, subprocess
 from pathlib import Path
+import math
 
 MODEL_PATH = Path(__file__).resolve().parent / "parte-2-2.mod"
 
-# ------------------ Parse input ------------------
 def parse_input(path):
     lines = [ln.strip() for ln in Path(path).read_text(encoding="utf-8").splitlines() if ln.strip()]
     n, m, u = map(int, lines[0].split())
@@ -14,7 +14,6 @@ def parse_input(path):
     o = [list(map(int, lines[m+1 + w].split())) for w in range(u)]
     return n, m, u, c, o
 
-# ------------------ Write .dat ------------------
 def write_dat(path, n, m, u, c, o):
     with open(path, "w", encoding="utf-8") as f:
         f.write(f"set BUSES := {' '.join(str(i+1) for i in range(m))};\n")
@@ -33,7 +32,6 @@ def write_dat(path, n, m, u, c, o):
                 f.write(f"  {w+1} {s+1} {o[w][s]}\n")
         f.write(";\n")
 
-# ------------------ Run GLPK ------------------
 def run_glpsol(model, dat, out_dir):
     out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
     txt = out_dir / "glpsol.out"; sol = out_dir / "solution.sol"
@@ -44,7 +42,6 @@ def run_glpsol(model, dat, out_dir):
         raise SystemExit(f"ERROR: glpsol exited with code {proc.returncode}.")
     return txt, sol
 
-# ------------------ Parse objective ------------------
 def parse_objective(glpsol_out_txt):
     for ln in Path(glpsol_out_txt).read_text(encoding="utf-8").splitlines():
         if ln.strip().startswith("Objective:"):
@@ -53,7 +50,6 @@ def parse_objective(glpsol_out_txt):
                 return float(m.group(1))
     return None
 
-# ------------------ Parse assignments ------------------
 def parse_assignments(glpsol_out_txt, m):
     assign = []
     text = Path(glpsol_out_txt).read_text(encoding="utf-8").splitlines()
@@ -73,7 +69,6 @@ def parse_assignments(glpsol_out_txt, m):
                 assign.append((int(mi.group(1)), int(mi.group(2)), int(mi.group(3))))
     return assign
 
-# ------------------ Main ------------------
 def main():
     if len(sys.argv) != 3:
         print("Usage: ./gen-2.py INPUT_FILE OUTPUT_DAT", file=sys.stderr); sys.exit(2)
@@ -82,8 +77,14 @@ def main():
     n, m, u, c, o = parse_input(in_path)
     write_dat(out_dat, n, m, u, c, o)
 
-    num_vars = m * n * u
-    num_cons = m + n * u  # approx count
+    if m < 2:
+        num_pairs = 0
+    else:
+        num_pairs = math.comb(m, 2)
+
+    num_vars = (m * n * u) + (num_pairs * n) #calculated value of variables
+
+    num_cons = m + (n * u) + (3 * num_pairs * n) #calculated value of constraints
 
     if not MODEL_PATH.exists():
         print(f"WARNING: Model file not found at {MODEL_PATH}.", file=sys.stderr)
