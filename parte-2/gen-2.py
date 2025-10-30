@@ -8,9 +8,9 @@ MODEL_PATH = Path(__file__).resolve().parent / "parte-2-2.mod"
 def parse_input(path):
     lines = [ln.strip() for ln in Path(path).read_text(encoding="utf-8").splitlines() if ln.strip()]
     n, m, u = map(int, lines[0].split())
-    # Passenger overlap matrix c[i,j]
+    # passenger overlap matrix c[i,j]
     c = [list(map(float, lines[i+1].split())) for i in range(m)]
-    # Slot availability o[w,s]
+    # slot availability o[w,s]
     o = [list(map(int, lines[m+1 + w].split())) for w in range(u)]
     return n, m, u, c, o
 
