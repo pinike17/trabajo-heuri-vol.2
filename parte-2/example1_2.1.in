@@ -1,9 +1,0 @@
-# example.in
-# n m
-3 5
-# kd kp
-2.0  5.0
-# d1..dm (m distances)
-10 25 5  10 20
-# p1..pm (m passenger counts)
-20 40 15 10 5
