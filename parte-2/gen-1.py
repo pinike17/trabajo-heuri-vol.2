@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
 import sys, re, subprocess
 from pathlib import Path
 
 MODEL_PATH = Path(__file__).resolve().parent / "parte-2-1.mod"
 
-# ------------------ Parsing input ------------------
+# In this part we parse the input file
 def parse_input(path):
     lines = [ln.strip() for ln in Path(path).read_text(encoding="utf-8").splitlines()
              if ln.strip() and not ln.strip().startswith("#")]
@@ -17,11 +16,11 @@ def parse_input(path):
     p_vals = list(map(float, lines[3].split()))
 
     if len(d_vals) != m: raise ValueError(f"Expected m={m} distances, got {len(d_vals)}.")
-    if len(p_vals) != m: raise ValueError(f"Expected m={m} passenger counts, got {len(p_vals)}.")
+    if len(p_vals) != m: raise ValueError(f"Expected m={m} passengers, got {len(p_vals)}.")
 
     return n, m, kd, kp, d_vals, p_vals
 
-# ------------------ Writing .dat ------------------
+# In this part we write the .dat file for GLPK
 def write_dat(path, n, m, kd, kp, d_vals, p_vals):
     with open(path, "w", encoding="utf-8") as f:
         f.write(f"set BUSES := {' '.join(str(i+1) for i in range(m))};\n")
@@ -36,7 +35,7 @@ def write_dat(path, n, m, kd, kp, d_vals, p_vals):
             f.write(f"  {i} {int(v) if float(v).is_integer() else v}\n")
         f.write(";\n")
 
-# ------------------ Run GLPK ------------------
+# In this part we run glpsol with the model and data files
 def run_glpsol(model, dat, out_dir):
     out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
     txt = out_dir / "glpsol.out"; sol = out_dir / "solution.sol"
@@ -47,7 +46,7 @@ def run_glpsol(model, dat, out_dir):
         raise SystemExit(f"ERROR: glpsol exited with code {proc.returncode}.")
     return txt, sol
 
-# ------------------ Parse Objective ------------------
+# In this part we parse the objective value from glpsol output
 def parse_objective(glpsol_out_txt):
     for ln in Path(glpsol_out_txt).read_text(encoding="utf-8").splitlines():
         if ln.strip().startswith("Objective:"):
@@ -56,7 +55,7 @@ def parse_objective(glpsol_out_txt):
                 return float(m.group(1))
     return None
 
-# ------------------ Parse Assignments ------------------
+# In this part we parse the variable assignments from glpsol output
 def parse_assignment_from_out(glpsol_out_txt, m):
     text = Path(glpsol_out_txt).read_text(encoding="utf-8").splitlines()
     try:
@@ -84,7 +83,7 @@ def parse_assignment_from_out(glpsol_out_txt, m):
                 assign[int(mi.group(1))] = None
     return assign
 
-# ------------------ Main ------------------
+# In this part we define the main function to tie everything together
 def main():
     if len(sys.argv) != 3:
         print("Usage: ./gen-1.py INPUT_FILE OUTPUT_DAT", file=sys.stderr); sys.exit(2)
